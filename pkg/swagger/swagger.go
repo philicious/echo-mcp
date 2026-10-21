@@ -55,6 +55,7 @@ type SwaggerSchema struct {
 	Ref                  string                    `json:"$ref,omitempty"`
 	Properties           map[string]*SwaggerSchema `json:"properties,omitempty"`
 	AdditionalProperties *SwaggerSchema            `json:"additionalProperties,omitempty"`
+	Items                *SwaggerSchema            `json:"items,omitempty"`
 	Minimum              *float64                  `json:"minimum,omitempty"`
 	Maximum              *float64                  `json:"maximum,omitempty"`
 	Type                 string                    `json:"type,omitempty"`
@@ -154,8 +155,12 @@ func (spec *SwaggerSpec) GetOperationSchema(method, path string) (map[string]any
 				paramFormat = "binary"
 			}
 
-			propSchema := map[string]any{
-				"type": paramType,
+			propSchema := map[string]any{}
+			if paramType != "" {
+				propSchema["type"] = paramType
+			}
+			if paramType == "array" {
+				propSchema["items"] = map[string]any{}
 			}
 
 			if paramFormat != "" {
@@ -221,15 +226,22 @@ func (spec *SwaggerSpec) convertSwaggerSchemaToMCP(schema *SwaggerSchema) any {
 
 	result := map[string]any{}
 
-	if schema.Type != "" {
+	if schema.Type == "file" {
+		result["type"] = "string"
+		result["format"] = "binary"
+	} else if schema.Type != "" {
 		result["type"] = schema.Type
+	}
+
+	if schema.Items != nil {
+		result["items"] = spec.convertSwaggerSchemaToMCP(schema.Items)
 	}
 
 	if schema.Description != "" {
 		result["description"] = schema.Description
 	}
 
-	if schema.Format != "" {
+	if schema.Format != "" && result["format"] == nil {
 		result["format"] = schema.Format
 	}
 

@@ -166,7 +166,7 @@ func generateInputSchema(route echo.RouteInfo, registeredSchema types.Registered
 	}
 
 	if len(required) > 0 {
-		schema["required"] = required
+		schema["required"] = uniqueStrings(required)
 	}
 
 	return schema
@@ -302,4 +302,18 @@ func extractFormDataParameters(route echo.RouteInfo, swaggerSpec *swagger.Swagge
 	}
 
 	return formDataParams
+}
+
+// uniqueStrings removes duplicates (JSON Schema requires "required" entries to be unique)
+func uniqueStrings(in []string) []string {
+	seen := make(map[string]struct{}, len(in))
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		if _, ok := seen[s]; ok {
+			continue
+		}
+		seen[s] = struct{}{}
+		out = append(out, s)
+	}
+	return out
 }
