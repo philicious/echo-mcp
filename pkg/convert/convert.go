@@ -52,6 +52,8 @@ func ConvertRoutesToTools(routes echo.Routes, registeredSchemas map[string]types
 	return tools, operations
 }
 
+var invalidNameChars = regexp.MustCompile(`[^a-z0-9_-]`)
+
 // generateOperationID creates a unique operation ID for a route, some agents only support tools names that only contain [a-z0-9_-]
 func generateOperationID(method, path string) string {
 	// Convert path parameters to a consistent format
@@ -61,6 +63,9 @@ func generateOperationID(method, path string) string {
 	normalizedPath = strings.ReplaceAll(normalizedPath, ".", "")
 	normalizedPath = strings.Trim(normalizedPath, "_")
 	normalizedPath = strings.ToLower(normalizedPath)
+	// Wildcards and any other character outside [a-z0-9_-] are not valid in tool names
+	normalizedPath = strings.ReplaceAll(normalizedPath, "*", "wildcard")
+	normalizedPath = invalidNameChars.ReplaceAllString(normalizedPath, "_")
 
 	if normalizedPath == "" {
 		normalizedPath = "root"

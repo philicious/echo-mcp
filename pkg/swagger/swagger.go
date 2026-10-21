@@ -235,6 +235,8 @@ func (spec *SwaggerSpec) convertSwaggerSchemaToMCP(schema *SwaggerSchema) any {
 
 	if schema.Items != nil {
 		result["items"] = spec.convertSwaggerSchemaToMCP(schema.Items)
+	} else if schema.Type == "array" {
+		result["items"] = map[string]any{}
 	}
 
 	if schema.Description != "" {
